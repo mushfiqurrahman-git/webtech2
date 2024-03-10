@@ -41,7 +41,7 @@ switch ($request_method) {
         }
         break;
     case 'POST':
-        //OSOT End Point For CART API
+        //POST End Point For CART API
         $query = "INSERT INTO Cart (user_id) VALUES (?)";
         query($query, [$_POST['user_id']]);
         echo json_encode(['message' => ' Successfully Created']);
@@ -71,6 +71,8 @@ switch ($request_method) {
         }
         break;
     case 'DELETE':
+        //DELETE End Point For CART API
+
         parse_str(file_get_contents("php://input"), $delete_vars);
 
         $cart_id = $delete_vars['cart_id'];
