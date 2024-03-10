@@ -13,7 +13,8 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
-function query($query, $params = []) {
+function query($query, $params = [])
+{
     global $pdo;
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
@@ -44,7 +45,7 @@ switch ($request_method) {
         }
         break;
     case 'POST':
-         //POST End Point For COMMENTS API
+        //POST End Point For COMMENTS API
         $data = json_decode(file_get_contents("php://input"), true);
         $product_id = $data['product_id'];
         $user_id = $data['user_id'];
@@ -55,10 +56,48 @@ switch ($request_method) {
         $query = "INSERT INTO Comments (product_id, user_id, rating, image, text) VALUES (?, ?, ?, ?, ?)";
         query($query, [$product_id, $user_id, $rating, $image, $text]);
         echo json_encode(['message' => 'Successfully Created']);
+
+
+        break;
+    case 'PUT':
+        // PUT End Point For COMMENTS API
+        $data = json_decode(file_get_contents("php://input"), true);
+        $requiredFields = ['comment_id', 'product_id', 'user_id', 'rating', 'image', 'text'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                header("Bad Request");
+                echo json_encode(['error' => 'Missing fields']);
+                exit;
+            }
+        }
+
+        $comment_id = $data['comment_id'];
+        $product_id = $data['product_id'];
+        $user_id = $data['user_id'];
+        $rating = $data['rating'];
+        $image = $data['image'];
+        $text = $data['text'];
+
+        $query = "UPDATE Comments SET product_id = ?, user_id = ?, rating = ?, image = ?, text = ? WHERE id = ?";
+        query($query, [$product_id, $user_id, $rating, $image, $text, $comment_id]);
+
+        echo json_encode(['message' => 'Comment updated successfully']);
+        break;
+    case 'DELETE':
+        // DELETE End Point For COMMENTS API
+        $data = json_decode(file_get_contents("php://input"), true);
+        if (isset($data['comment_id'])) {
+            $comment_id = $data['comment_id'];
+            $query = "DELETE FROM Comments WHERE id = ?";
+            query($query, [$comment_id]);
+            echo json_encode(['message' => ' deleted Comment']);
+        } else {
+            header("Bad Request");
+            echo json_encode(['error' => 'Missing comment_id']);
+        }
         break;
     default:
-        header("Not Allowed");
+        header(" Not Allowed");
         break;
 }
-
 ?>
