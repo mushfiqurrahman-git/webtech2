@@ -1,4 +1,5 @@
 <?php
+// database connection code
 
 $host = 'localhost';
 $dbname = 'mystore';
@@ -23,6 +24,8 @@ $request_method = $_SERVER['REQUEST_METHOD'];
 
 switch ($request_method) {
     case 'GET':
+        //GET End Point For ORDER API
+
         if (isset($_GET['user_id'])) {
             $user_id = $_GET['user_id'];
             $query = "SELECT * FROM `Order` WHERE user_id = ?";
@@ -30,11 +33,12 @@ switch ($request_method) {
             $orders = $result->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode($orders);
         } else {
-            header("HTTP/1.0 400 Bad Request");
+            header("Bad Request");
             echo json_encode(['error' => 'Invalid request']);
         }
         break;
     case 'POST':
+         //POST End Point For ORDER API
         $data = json_decode(file_get_contents("php://input"), true);
         $user_id = $data['user_id'];
         $total_amount = $data['total_amount'];
@@ -44,7 +48,7 @@ switch ($request_method) {
         echo json_encode(['message' => 'Order created successfully']);
         break;
     default:
-        header("HTTP/1.0 405 Method Not Allowed");
+        header("Not Allowed");
         break;
 }
 

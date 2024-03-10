@@ -1,4 +1,5 @@
 <?php
+// database connection code
 
 $host = 'localhost';
 $dbname = 'mystore';
@@ -23,6 +24,8 @@ $request_method = $_SERVER['REQUEST_METHOD'];
 
 switch ($request_method) {
     case 'GET':
+        //GET End Point For COMMENTS API
+
         if (isset($_GET['product_id'])) {
             $product_id = $_GET['product_id'];
             $query = "SELECT * FROM Comments WHERE product_id = ?";
@@ -36,11 +39,12 @@ switch ($request_method) {
             $comments = $result->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode($comments);
         } else {
-            header("HTTP/1.0 400 Bad Request");
+            header("Bad Request");
             echo json_encode(['error' => 'Invalid request']);
         }
         break;
     case 'POST':
+         //POST End Point For COMMENTS API
         $data = json_decode(file_get_contents("php://input"), true);
         $product_id = $data['product_id'];
         $user_id = $data['user_id'];
@@ -50,10 +54,10 @@ switch ($request_method) {
 
         $query = "INSERT INTO Comments (product_id, user_id, rating, image, text) VALUES (?, ?, ?, ?, ?)";
         query($query, [$product_id, $user_id, $rating, $image, $text]);
-        echo json_encode(['message' => 'Comment created successfully']);
+        echo json_encode(['message' => 'Successfully Created']);
         break;
     default:
-        header("HTTP/1.0 405 Method Not Allowed");
+        header("Not Allowed");
         break;
 }
 

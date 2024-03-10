@@ -1,4 +1,5 @@
 <?php
+// database connection code
 
 $host = 'localhost';
 $dbname = 'mystore';
@@ -12,14 +13,16 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
-function query($query, $params = []) {
+function query($query, $params = [])
+{
     global $pdo;
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     return $stmt;
 }
 
-function validateEmail($email) {
+function validateEmail($email)
+{
     return filter_var($email, FILTER_VALIDATE_EMAIL);
 }
 
@@ -27,6 +30,8 @@ $request_method = $_SERVER['REQUEST_METHOD'];
 
 switch ($request_method) {
     case 'GET':
+        //GET End Point For USER API
+
         if (isset($_GET['user_id'])) {
             $user_id = $_GET['user_id'];
             $query = "SELECT * FROM `User` WHERE id = ?";
@@ -41,16 +46,20 @@ switch ($request_method) {
         }
         break;
     case 'POST':
+        //POST End Point For USER API
+
         $data = json_decode(file_get_contents("php://input"), true);
         $email = $data['email'];
         $password = $data['password'];
         $username = $data['username'];
         $purchase_history = isset($data['purchase_history']) ? $data['purchase_history'] : '';
         $shipping_address = isset($data['shipping_address']) ? $data['shipping_address'] : '';
+        
+        //validating the email
 
         if (!validateEmail($email)) {
-            header("HTTP/1.0 400 Bad Request");
-            echo json_encode(['error' => 'Invalid email format']);
+            header("Bad Request");
+            echo json_encode(['error' => 'Email format not valid']);
             exit;
         }
 
@@ -59,8 +68,6 @@ switch ($request_method) {
         echo json_encode(['message' => 'User created successfully']);
         break;
     default:
-        header("HTTP/1.0 405 Method Not Allowed");
+        header("Not Allowed");
         break;
 }
-
-?>
