@@ -1,5 +1,5 @@
 <?php
-
+// Database connection code
 $host = 'localhost';
 $dbname = 'mystore';
 $username = 'root';
@@ -24,79 +24,82 @@ $request_method = $_SERVER['REQUEST_METHOD'];
 
 switch ($request_method) {
     case 'GET':
-
-        //GET End Point For CART API
-
-        if (isset($_GET['cart_id'])) {
-            $cart_id = $_GET['cart_id'];
-            $query = "SELECT * FROM Cart WHERE id = ?";
-            $result = query($query, [$cart_id]);
-            $cart = $result->fetch(PDO::FETCH_ASSOC);
+        // GET End Point For Cart API
+        if (isset($_GET['user_id'])) {
+            $user_id = $_GET['user_id'];
+            $query = "SELECT * FROM cart WHERE user_id = ?";
+            $result = query($query, [$user_id]);
+            $cart = $result->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode($cart);
-        } else {
-            $query = "SELECT * FROM Cart";
-            $result = query($query);
-            $carts = $result->fetchAll(PDO::FETCH_ASSOC);
-            echo json_encode($carts);
-        }
-        break;
-    case 'POST':
-
-        //POST End Point For CART API
-
-        if (isset($_POST['user_id'])) {
-            $user_id = $_POST['user_id'];
-            $query = "INSERT INTO Cart (user_id) VALUES (?)";
-            query($query, [$user_id]);
-            echo json_encode(['message' => 'Successfully Created']);
         } else {
             header("Bad Request");
             echo json_encode(['error' => 'User ID is missing']);
         }
         break;
-    case 'PUT':
-
-        //PUT End Point For CART API
-
-        parse_str(file_get_contents("php://input"), $put_vars);
-        $cart_id = $put_vars['cart_id'];
-        $product_id = $put_vars['product_id'];
-        $quantity = $put_vars['quantity'];
-
-        $query = "SELECT * FROM CartItems WHERE cart_id = ? AND product_id = ?";
-        $result = query($query, [$cart_id, $product_id]);
-        $existing_item = $result->fetch(PDO::FETCH_ASSOC);
-
-        if ($existing_item) {
-            $new_quantity = $existing_item['quantity'] + $quantity;
-            $query = "UPDATE CartItems SET quantity = ? WHERE cart_id = ? AND product_id = ?";
-            query($query, [$new_quantity, $cart_id, $product_id]);
-            echo json_encode(['message' => 'Quantity Updated']);
-        } else {
-            $query = "INSERT INTO CartItems (cart_id, product_id, quantity) VALUES (?, ?, ?)";
-            query($query, [$cart_id, $product_id, $quantity]);
-            echo json_encode(['message' => 'Item added to cart']);
+    case 'POST':
+        // POST End Point For Cart API
+        $data = json_decode(file_get_contents("php://input"), true);
+        if (!isset($data['user_id']) || !isset($data['products']) || !isset($data['quantities'])) {
+            header("Bad Request");
+            echo json_encode(['error' => 'Missing fields']);
+            exit;
         }
+        $user_id = $data['user_id'];
+        $products = $data['products'];
+        $quantities = $data['quantities'];
+
+
+        $query = "INSERT INTO cart (user_id, products, quantities) VALUES (?, ?, ?)";
+        query($query, [$user_id, $products, $quantities]);
+        echo json_encode(['message' => 'Cart created successfully']);
+        break;
+    case 'PUT':
+        // PUT End Point For CART API
+        $data = json_decode(file_get_contents("php://input"), true);
+        $missingFields = [];
+
+        if (!isset($data['cart_id'])) {
+            $missingFields[] = 'cart_id';
+        }
+        if (!isset($data['user_id'])) {
+            $missingFields[] = 'user_id';
+        }
+        if (!isset($data['products'])) {
+            $missingFields[] = 'products';
+        }
+        if (!isset($data['quantities'])) {
+            $missingFields[] = 'quantities';
+        }
+
+        if (!empty($missingFields)) {
+            header("Bad Request");
+            echo json_encode(['error' => 'Missing field(s): ' . implode(', ', $missingFields)]);
+            exit;
+        }
+        $cart_id = $data['cart_id'];
+        $user_id = $data['user_id'];
+        $products = $data['products'];
+        $quantities = $data['quantities'];
+
+        $query = "UPDATE cart SET user_id = ?, products = ?, quantities = ? WHERE id = ?";
+        query($query, [$user_id, json_encode($products), json_encode($quantities), $cart_id]);
+
+
+        echo json_encode(['message' => 'Cart updated successfully']);
         break;
     case 'DELETE':
-
-        //DELETE End Point For CART API
-
-        parse_str(file_get_contents("php://input"), $delete_vars);
-        $cart_id = $delete_vars['cart_id'];
-        $product_id = $delete_vars['product_id'];
-
-        if ($product_id) {
-            $query = "DELETE FROM CartItems WHERE cart_id = ? AND product_id = ?";
-            query($query, [$cart_id, $product_id]);
-            echo json_encode(['message' => 'Removed Item']);
-        } else {
-            $query = "DELETE FROM CartItems WHERE cart_id = ?";
+        // DELETE End Point For Cart API
+        if (isset($_GET['cart_id'])) {
+            $cart_id = $_GET['cart_id'];
+            $query = "DELETE FROM cart WHERE id = ?";
             query($query, [$cart_id]);
-            echo json_encode(['message' => 'Cleared']);
+            echo json_encode(['message' => 'Cart deleted successfully']);
+        } else {
+            header("Bad Request");
+            echo json_encode(['error' => 'Missing cart_id']);
         }
         break;
     default:
-        header("HTTP/1.0 405 Method Not Allowed");
+        header(" Not Allowed");
         break;
 }

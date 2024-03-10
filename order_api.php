@@ -53,7 +53,7 @@ switch ($request_method) {
         $user_id = $data['user_id'];
         $total_amount = $data['total_amount'];
 
-        // Check if total_amount is a valid number
+        // if total_amount is valid 
         if (!is_numeric($total_amount) || $total_amount <= 0) {
             header("Bad Request");
             echo json_encode(['error' => 'Invalid amount']);
@@ -81,7 +81,7 @@ switch ($request_method) {
         $user_id = $data['user_id'];
         $total_amount = $data['total_amount'];
 
-        // Check if total_amount is a valid number
+        // if total_amount is valid
         if (!is_numeric($total_amount) || $total_amount <= 0) {
             header("Bad Request");
             echo json_encode(['error' => 'Invalid amount']);
