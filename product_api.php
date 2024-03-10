@@ -43,6 +43,18 @@ switch ($request_method) {
         $pricing = $data['pricing'];
         $shipping_cost = $data['shipping_cost'];
         
+        if (!is_numeric($pricing) || $pricing <= 0) {
+            header("HTTP/1.0 400 Bad Request");
+            echo json_encode(['error' => 'Invalid pricing']);
+            exit;
+        }
+        
+        if (!is_numeric($shipping_cost) || $shipping_cost <= 0) {
+            header("HTTP/1.0 400 Bad Request");
+            echo json_encode(['error' => 'Invalid shipping cost']);
+            exit;
+        }
+        
         $query = "INSERT INTO Product (description, image, pricing, shipping_cost) VALUES (?, ?, ?, ?)";
         query($query, [$description, $image, $pricing, $shipping_cost]);
         echo json_encode(['message' => 'Product created successfully']);
@@ -54,6 +66,18 @@ switch ($request_method) {
         $image = $data['image'];
         $pricing = $data['pricing'];
         $shipping_cost = $data['shipping_cost'];
+        
+        if (!is_numeric($pricing) || $pricing <= 0) {
+            header("HTTP/1.0 400 Bad Request");
+            echo json_encode(['error' => 'Invalid pricing']);
+            exit;
+        }
+        
+        if (!is_numeric($shipping_cost) || $shipping_cost <= 0) {
+            header("HTTP/1.0 400 Bad Request");
+            echo json_encode(['error' => 'Invalid shipping cost']);
+            exit;
+        }
         
         $query = "UPDATE Product SET description = ?, image = ?, pricing = ?, shipping_cost = ? WHERE id = ?";
         query($query, [$description, $image, $pricing, $shipping_cost, $product_id]);
