@@ -1,6 +1,5 @@
 <?php
-// database connection code
-
+// Database connection code
 $host = 'localhost';
 $dbname = 'mystore';
 $username = 'root';
@@ -22,34 +21,90 @@ function query($query, $params = []) {
 
 $request_method = $_SERVER['REQUEST_METHOD'];
 
+// GET End Point For ORDER API
 switch ($request_method) {
     case 'GET':
-        //GET End Point For ORDER API
-
-        if (isset($_GET['user_id'])) {
-            $user_id = $_GET['user_id'];
-            $query = "SELECT * FROM `Order` WHERE user_id = ?";
-            $result = query($query, [$user_id]);
+        if (isset($_GET['order_id'])) {
+            $order_id = $_GET['order_id'];
+            $query = "SELECT * FROM `order` WHERE id = ?";
+            $result = query($query, [$order_id]);
+            $order = $result->fetch(PDO::FETCH_ASSOC);
+            echo json_encode($order);
+        } else {
+            $query = "SELECT * FROM `order`";
+            $result = query($query);
             $orders = $result->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode($orders);
-        } else {
-            header("Bad Request");
-            echo json_encode(['error' => 'Invalid request']);
         }
         break;
+
+    // POST End Point For ORDER API
     case 'POST':
-         //POST End Point For ORDER API
         $data = json_decode(file_get_contents("php://input"), true);
+        $requiredFields = ['user_id', 'total_amount'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                header("Bad Request");
+                echo json_encode(['error' => 'Missing fields']);
+                exit;
+            }
+        }
+
         $user_id = $data['user_id'];
         $total_amount = $data['total_amount'];
 
-        $query = "INSERT INTO `Order` (user_id, total_amount) VALUES (?, ?)";
+        // Check if total_amount is a valid number
+        if (!is_numeric($total_amount) || $total_amount <= 0) {
+            header("Bad Request");
+            echo json_encode(['error' => 'Invalid amount']);
+            exit;
+        }
+
+        $query = "INSERT INTO `order` (user_id, total_amount) VALUES (?, ?)";
         query($query, [$user_id, $total_amount]);
-        echo json_encode(['message' => 'Order created successfully']);
+        echo json_encode(['message' => 'Successfully Created']);
         break;
+
+    // PUT End Point For ORDER API
+    case 'PUT':
+        $data = json_decode(file_get_contents("php://input"), true);
+        $requiredFields = ['id', 'user_id', 'total_amount'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                header("Bad Request");
+                echo json_encode(['error' => 'Missing fields']);
+                exit;
+            }
+        }
+
+        $order_id = $data['id'];
+        $user_id = $data['user_id'];
+        $total_amount = $data['total_amount'];
+
+        // Check if total_amount is a valid number
+        if (!is_numeric($total_amount) || $total_amount <= 0) {
+            header("Bad Request");
+            echo json_encode(['error' => 'Invalid amount']);
+            exit;
+        }
+
+        $query = "UPDATE `order` SET user_id = ?, total_amount = ? WHERE id = ?";
+        query($query, [$user_id, $total_amount, $order_id]);
+        echo json_encode(['message' => 'Successfully Updated']);
+        break;
+
+    // DELETE End Point For ORDER API
+    case 'DELETE':
+        $data = json_decode(file_get_contents("php://input"), true);
+        $order_id = $data['id'];
+
+        $query = "DELETE FROM `order` WHERE id = ?";
+        query($query, [$order_id]);
+        echo json_encode(['message' => 'Successfully Deleted']);
+        break;
+
     default:
         header("Not Allowed");
         break;
 }
-
 ?>

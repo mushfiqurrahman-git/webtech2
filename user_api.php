@@ -49,6 +49,11 @@ switch ($request_method) {
         //POST End Point For USER API
 
         $data = json_decode(file_get_contents("php://input"), true);
+        if (!isset($data['email']) || !isset($data['password']) || !isset($data['username'])) {
+            header("HTTP/1.0 400 Bad Request");
+            echo json_encode(['error' => 'Missing required fields']);
+            exit;
+        }
         $email = $data['email'];
         $password = $data['password'];
         $username = $data['username'];

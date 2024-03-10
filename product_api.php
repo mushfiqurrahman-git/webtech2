@@ -1,5 +1,5 @@
 <?php
-// database connection code
+// Database connection code
 $host = 'localhost';
 $dbname = 'mystore';
 $username = 'root';
@@ -12,8 +12,7 @@ try {
     die("Database connection failed: " . $e->getMessage());
 }
 
-function query($query, $params = [])
-{
+function query($query, $params = []) {
     global $pdo;
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
@@ -22,7 +21,7 @@ function query($query, $params = [])
 
 $request_method = $_SERVER['REQUEST_METHOD'];
 
-//GET End Point For PRODUCT API
+// GET End Point For PRODUCT API
 switch ($request_method) {
     case 'GET':
         if (isset($_GET['product_id'])) {
@@ -39,71 +38,86 @@ switch ($request_method) {
         }
         break;
 
-        //POST End Point For PRODUCT API
+    // POST End Point For PRODUCT API
     case 'POST':
         $data = json_decode(file_get_contents("php://input"), true);
+        $requiredFields = ['description', 'pricing', 'shipping_cost'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                header("Bad Request", true, 400);
+                echo json_encode(['error' => 'Missing required fields']);
+                exit;
+            }
+        }
+
         $description = $data['description'];
-        $image = $data['image'];
         $pricing = $data['pricing'];
         $shipping_cost = $data['shipping_cost'];
 
-        if (!is_numeric($pricing) || $pricing <= 0) {
-            header("Bad Request");
-            echo json_encode(['error' => 'Invalid pricing']);
+        // Check pricing and shipping_cost
+        if (!is_numeric($pricing) || $pricing <= 0 || !is_numeric($shipping_cost) || $shipping_cost <= 0) {
+            header("Bad Request", true, 400);
+            echo json_encode(['error' => 'Invalid pricing or shipping cost']);
             exit;
         }
 
-        if (!is_numeric($shipping_cost) || $shipping_cost <= 0) {
-            header("Bad Request");
-            echo json_encode(['error' => 'Invalid shipping cost']);
-            exit;
-        }
+        // Optional image field
+        $image = isset($data['image']) ? $data['image'] : null;
 
         $query = "INSERT INTO Product (description, image, pricing, shipping_cost) VALUES (?, ?, ?, ?)";
         query($query, [$description, $image, $pricing, $shipping_cost]);
         echo json_encode(['message' => 'Product created successfully']);
         break;
+
+    // PUT End Point For PRODUCT API
     case 'PUT':
-
-        //PUT End Point For PRODUCT API
-
         $data = json_decode(file_get_contents("php://input"), true);
+        $requiredFields = ['id', 'description', 'pricing', 'shipping_cost'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                header("Bad Request", true, 400);
+                echo json_encode(['error' => 'Missing required fields']);
+                exit;
+            }
+        }
+
         $product_id = $data['id'];
         $description = $data['description'];
-        $image = $data['image'];
         $pricing = $data['pricing'];
         $shipping_cost = $data['shipping_cost'];
 
-        //checking if pricing is anything other than number
-
-        if (!is_numeric($pricing) || $pricing <= 0) {
-            header("Bad Request");
-            echo json_encode(['error' => 'Pricing not valid']);
+        // Check pricing and shipping_cost
+        if (!is_numeric($pricing) || $pricing <= 0 || !is_numeric($shipping_cost) || $shipping_cost <= 0) {
+            header("Bad Request", true, 400);
+            echo json_encode(['error' => 'Invalid pricing or shipping cost']);
             exit;
         }
 
-        //checking if shipping cost is anything other than number
-
-        if (!is_numeric($shipping_cost) || $shipping_cost <= 0) {
-            header("Bad Request");
-            echo json_encode(['error' => 'enter proper format']);
-            exit;
-        }
+        // Optional image field
+        $image = isset($data['image']) ? $data['image'] : null;
 
         $query = "UPDATE Product SET description = ?, image = ?, pricing = ?, shipping_cost = ? WHERE id = ?";
         query($query, [$description, $image, $pricing, $shipping_cost, $product_id]);
         echo json_encode(['message' => 'Successfully Updated']);
         break;
+
+    // DELETE End Point For PRODUCT API
     case 'DELETE':
-        //DELETE End Point For PRODUCT API
         $data = json_decode(file_get_contents("php://input"), true);
+        if (!isset($data['id'])) {
+            header("Bad Request", true, 400);
+            echo json_encode(['error' => 'Missing required fields']);
+            exit;
+        }
         $product_id = $data['id'];
 
         $query = "DELETE FROM Product WHERE id = ?";
         query($query, [$product_id]);
         echo json_encode(['message' => 'Successfully Deleted']);
         break;
+
     default:
-        header("ot Allowed");
+        header("Method Not Allowed", true, 405);
         break;
 }
+?>

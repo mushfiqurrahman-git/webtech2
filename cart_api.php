@@ -1,5 +1,4 @@
 <?php
-// database connection code
 
 $host = 'localhost';
 $dbname = 'mystore';
@@ -25,6 +24,7 @@ $request_method = $_SERVER['REQUEST_METHOD'];
 
 switch ($request_method) {
     case 'GET':
+
         //GET End Point For CART API
 
         if (isset($_GET['cart_id'])) {
@@ -41,19 +41,27 @@ switch ($request_method) {
         }
         break;
     case 'POST':
+
         //POST End Point For CART API
-        $query = "INSERT INTO Cart (user_id) VALUES (?)";
-        query($query, [$_POST['user_id']]);
-        echo json_encode(['message' => ' Successfully Created']);
+
+        if (isset($_POST['user_id'])) {
+            $user_id = $_POST['user_id'];
+            $query = "INSERT INTO Cart (user_id) VALUES (?)";
+            query($query, [$user_id]);
+            echo json_encode(['message' => 'Successfully Created']);
+        } else {
+            header("Bad Request");
+            echo json_encode(['error' => 'User ID is missing']);
+        }
         break;
     case 'PUT':
-        //PUT End Point For CART API
-        parse_str(file_get_contents("php://input"), $put_vars);
 
+        //PUT End Point For CART API
+
+        parse_str(file_get_contents("php://input"), $put_vars);
         $cart_id = $put_vars['cart_id'];
         $product_id = $put_vars['product_id'];
         $quantity = $put_vars['quantity'];
-
 
         $query = "SELECT * FROM CartItems WHERE cart_id = ? AND product_id = ?";
         $result = query($query, [$cart_id, $product_id]);
@@ -71,10 +79,10 @@ switch ($request_method) {
         }
         break;
     case 'DELETE':
+
         //DELETE End Point For CART API
 
         parse_str(file_get_contents("php://input"), $delete_vars);
-
         $cart_id = $delete_vars['cart_id'];
         $product_id = $delete_vars['product_id'];
 
@@ -89,6 +97,6 @@ switch ($request_method) {
         }
         break;
     default:
-        header(" Not Allowed");
+        header("HTTP/1.0 405 Method Not Allowed");
         break;
 }
